@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t siddantgurung/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true siddantgurung/react-test yarn test
+
+after_success:
+    - docker build -t siddantgurung/multi-client ./client
+    - docker build -t siddantgurung/multi-nginx ./nginx
+    - docker build -t siddantgurung/multi-server ./server
+    - docker build -t siddantgurung/multi-worker ./worker
+    # login to docker hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # pushing the docker images to docker hub
+    - docker push siddantgurung/multi-client
+    - docker push siddantgurung/multi-nginx
+    - docker push siddantgurung/multi-server
+    - docker push siddantgurung/multi-worker
